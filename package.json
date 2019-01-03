@@ -1,14 +1,17 @@
 {
   "name": "reverest",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "prepare": "tsc",
     "start": "npm run build && node dist/index.js",
     "test": "nyc mocha -r ts-node/register tests/**/*.ts"
   },
+  "files": [
+    "dist"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
