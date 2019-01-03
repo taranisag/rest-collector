@@ -1,4 +1,4 @@
-export default class ReverestRequest {
+export class ReverestRequest {
     public headers: any;
     constructor() {
         this.headers = {

@@ -1,33 +1,32 @@
 "use strict";
 
-import IDecorateRequest from "./IDecorateRequest";
-import { Request } from "express";
-import ReverestRequest from "./ReverestRequest";
+import { IDecorateRequest } from "./IDecorateRequest";
+import { ReverestRequest } from "./ReverestRequest";
 const unirest: any = require("unirest");
 
 
-export interface IRestMapperOptions {
+export interface IRestMapperOptions<E> {
 	entityAttribute: string;
 	restAPIAttribute: string;
 	restAPIURL: string;
+	mergeEntities(entity: E, possibleValue: any): void;
 }
 
-export default abstract class RestMapper<E, K> {
+export class RestMapper<E, B> {
 
 	private entityAttribute: string;
 	private restAPIAttribute: string;
 	private restAPIURL: string;
 	private dataValues: any[] = [];
+	private mergeEntities: (entity: E, possibleValue: any) => void;
 	public dataLookup: any;
 
-
-	protected abstract mergeEntities(entity: E, possibleValue: any): void;
-
-	constructor(options: IRestMapperOptions) {
+	constructor(options: IRestMapperOptions<E>) {
 		this.entityAttribute = options.entityAttribute;
 		this.restAPIAttribute = options.restAPIAttribute;
 		this.restAPIURL = options.restAPIURL;
 		this.dataLookup = {};
+		this.mergeEntities = options.mergeEntities;
 	}
 
 	public collectData(entity: E): void {
@@ -39,7 +38,7 @@ export default abstract class RestMapper<E, K> {
 		}
 	}
 
-	public async queryData(decorateCallback: IDecorateRequest<K>, bag: K): Promise<void> {
+	public async queryData(decorateCallback: IDecorateRequest<B>, bag: B): Promise<void> {
 		const req: ReverestRequest = new ReverestRequest();
 		var getEnititesUrl: any = unirest.get(this.restAPIURL);
 		decorateCallback.decorateRequest(req, bag);
@@ -48,7 +47,7 @@ export default abstract class RestMapper<E, K> {
 		const query: any = {};
 		query[this.restAPIAttribute] = this.dataValues;
 		getEnititesUrl.query(query);
-		const self: RestMapper<E, K> = this;
+		const self: RestMapper<E, B> = this;
 
 		return new Promise<void>((resolve, reject) => {
 			getEnititesUrl.end(function(response: any): void {
