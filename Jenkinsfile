@@ -13,7 +13,7 @@ podTemplate(label: 'dockerPod', containers: [
         stage('Clone repository') {
             checkout scm
 
-            chartName = "usersmanagement"
+            chartName = "reverest"
             dockerRegistry = "taranisag"
             dockerRepository = "${dockerRegistry}/${chartName}"
             shortCommit = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
