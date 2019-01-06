@@ -75,7 +75,7 @@ export class RevrestClient<E, B> {
         return url;
     }
 
-    public async sendRequest(options: IRevresetOptions<B>): Promise<any> {
+    public sendRequest(options: IRevresetOptions<B>): Promise<any> {
 
         return new Promise<any>((resolve, reject) => {
             var req: ReverestRequest = new ReverestRequest();
@@ -115,7 +115,7 @@ export class RevrestClient<E, B> {
                         });
                     }).catch(reject);                   
                 } else {
-                    throw new RevrestError(options.url!, response.status, response.body, options.query, options.data);
+                    reject(new RevrestError(options.url!, response.status, response.body, options.query, options.data));
                 }
             });
         });

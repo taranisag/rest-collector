@@ -132,6 +132,21 @@ describe("tests", async function(): Promise<void> {
         });
     });
 
+    it("get error - 404", async() => {
+        try {
+            const client: RevrestClient<ITagEntity, IBag> = new RevrestClient<ITagEntity, IBag>("http://localhost:3000/api/tagsdss/{id}", new DecorateRequest());
+            const result = await client.get({
+                bag:  { userId: "user34" },
+                params: {
+                    id: 334343
+                }
+            });
+        } catch (error) {
+            
+        }
+       
+    });
+
     after(()=> {
         server.close();
     })
