@@ -81,7 +81,7 @@ describe("tests", async function(): Promise<void> {
             bag:  { userId: "user34" }
         });
 
-        expect(result.items).to.deep.equal(tagEntitiesArray)
+        expect(result.data).to.deep.equal(tagEntitiesArray)
     });
 
     it("Simple by id", async() => {
@@ -90,7 +90,7 @@ describe("tests", async function(): Promise<void> {
             params: { id: 1 },
             bag:  { userId: "user34" }
         });
-        expect(result.items).to.deep.equal(tagEntitiesArray.filter(x=> x.id ===  1))
+        expect(result.data).to.deep.equal(tagEntitiesArray.filter(x=> x.id ===  1))
     });
 
     it("Simple With forigen keys", async() => {
@@ -110,7 +110,7 @@ describe("tests", async function(): Promise<void> {
             bag:  { userId: "context1" }
         });
 
-        expect(result.items).to.deep.equal([{
+        expect(result.data).to.deep.equal([{
             id: 1,
             userId: 3,
             email: "user3@taranis.ag"

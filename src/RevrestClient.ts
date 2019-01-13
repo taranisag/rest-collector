@@ -15,6 +15,11 @@ export interface IRevresetOptions<B> {
     data?: any;
 }
 
+export interface IRevresetResult {
+    data: any;
+    headers: any;
+}
+
 export class RevrestClient<E, B> {
     private mapperOptions: IRestMapperOptions<E>[];
     private entityRestAPI: string;
@@ -75,7 +80,7 @@ export class RevrestClient<E, B> {
         return url;
     }
 
-    public sendRequest(options: IRevresetOptions<B>): Promise<any> {
+    public sendRequest(options: IRevresetOptions<B>): Promise<IRevresetResult> {
 
         return new Promise<any>((resolve, reject) => {
             var req: ReverestRequest = new ReverestRequest();
@@ -110,7 +115,7 @@ export class RevrestClient<E, B> {
 
                     promise.then((results: any) => {
                         resolve({
-                            items: isArray ? results : results[0],
+                            data: isArray ? results : results[0],
                             headers: response.headers
                         });
                     }).catch(reject);                   
@@ -121,58 +126,46 @@ export class RevrestClient<E, B> {
         });
     }
 
-    public async get(options: IRevresetOptions<B>): Promise<any> {
+    public async get(options: IRevresetOptions<B>): Promise<IRevresetResult> {
         return this.sendRequest({
             ...options,
             method: "get"
         });
     }
 
-    public async post(options: IRevresetOptions<B>): Promise<any> {
+    public async post(options: IRevresetOptions<B>): Promise<IRevresetResult> {
         const result: any = await this.sendRequest({
             ...options,
             method: "post"
         });
         
-        return {
-            item: result.items,
-            headers: result.headers
-        }
+        return result;
     }
 
-    public async put(options: IRevresetOptions<B>): Promise<any> {
+    public async put(options: IRevresetOptions<B>): Promise<IRevresetResult> {
         const result: any = await this.sendRequest({
             ...options,
             method: "put"
         });
         
-        return {
-            item: result.items,
-            headers: result.headers
-        }
+        return result;
     }
 
-    public async delete(options: IRevresetOptions<B>): Promise<any> {
+    public async delete(options: IRevresetOptions<B>): Promise<IRevresetResult> {
         const result: any = await this.sendRequest({
             ...options,
             method: "delete"
         });
         
-        return {
-            item: result.items,
-            headers: result.headers
-        }
+        return result;
     }
 
-    public async patch(options: IRevresetOptions<B>): Promise<any> {
+    public async patch(options: IRevresetOptions<B>): Promise<IRevresetResult> {
         const result: any = await this.sendRequest({
             ...options,
             method: "patch"
         });
         
-        return {
-            item: result.items,
-            headers: result.headers
-        }
+        return result;
     }
 }
