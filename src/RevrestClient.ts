@@ -15,8 +15,8 @@ export interface IRevresetOptions<B> {
     data?: any;
 }
 
-export interface IRevresetResult {
-    data: any;
+export interface IRevresetResult<E> {
+    data: E;
     headers: any;
 }
 
@@ -80,7 +80,7 @@ export class RevrestClient<E, B> {
         return url;
     }
 
-    public sendRequest(options: IRevresetOptions<B>): Promise<IRevresetResult> {
+    public sendRequest(options: IRevresetOptions<B>): Promise<IRevresetResult<E>> {
 
         return new Promise<any>((resolve, reject) => {
             var req: ReverestRequest = new ReverestRequest();
@@ -126,14 +126,14 @@ export class RevrestClient<E, B> {
         });
     }
 
-    public async get(options: IRevresetOptions<B>): Promise<IRevresetResult> {
+    public async get(options: IRevresetOptions<B>): Promise<IRevresetResult<E>> {
         return this.sendRequest({
             ...options,
             method: "get"
         });
     }
 
-    public async post(options: IRevresetOptions<B>): Promise<IRevresetResult> {
+    public async post(options: IRevresetOptions<B>): Promise<IRevresetResult<E>> {
         const result: any = await this.sendRequest({
             ...options,
             method: "post"
@@ -142,7 +142,7 @@ export class RevrestClient<E, B> {
         return result;
     }
 
-    public async put(options: IRevresetOptions<B>): Promise<IRevresetResult> {
+    public async put(options: IRevresetOptions<B>): Promise<IRevresetResult<E>> {
         const result: any = await this.sendRequest({
             ...options,
             method: "put"
@@ -151,7 +151,7 @@ export class RevrestClient<E, B> {
         return result;
     }
 
-    public async delete(options: IRevresetOptions<B>): Promise<IRevresetResult> {
+    public async delete(options: IRevresetOptions<B>): Promise<IRevresetResult<E>> {
         const result: any = await this.sendRequest({
             ...options,
             method: "delete"
@@ -160,7 +160,7 @@ export class RevrestClient<E, B> {
         return result;
     }
 
-    public async patch(options: IRevresetOptions<B>): Promise<IRevresetResult> {
+    public async patch(options: IRevresetOptions<B>): Promise<IRevresetResult<E>> {
         const result: any = await this.sendRequest({
             ...options,
             method: "patch"
