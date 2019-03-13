@@ -10,6 +10,7 @@ export interface IRestMapperOptions<E> {
 	restAPIAttribute: string;
 	restAPIURL: string;
 	mergeEntities(entity: E, possibleValue: any): void;
+	method: string | null;
 }
 
 export class RestMapper<E, B> {
@@ -20,6 +21,7 @@ export class RestMapper<E, B> {
 	private dataValues: any[] = [];
 	private mergeEntities: (entity: E, possibleValue: any) => void;
 	public dataLookup: any;
+	private method: string;
 
 	constructor(options: IRestMapperOptions<E>) {
 		this.entityAttribute = options.entityAttribute;
@@ -27,6 +29,7 @@ export class RestMapper<E, B> {
 		this.restAPIURL = options.restAPIURL;
 		this.dataLookup = {};
 		this.mergeEntities = options.mergeEntities;
+		this.method = options.method || "get";
 	}
 
 	public collectData(entity: E): void {
@@ -40,13 +43,19 @@ export class RestMapper<E, B> {
 
 	public async queryData(decorateCallback: IDecorateRequest<B>, bag: B): Promise<void> {
 		const req: ReverestRequest = new ReverestRequest();
-		var getEnititesUrl: any = unirest.get(this.restAPIURL);
+		var getEnititesUrl: any = unirest[this.method](this.restAPIURL);
 		decorateCallback.decorateRequest(req, bag);
 
 		getEnititesUrl.headers(req.headers);
-		const query: any = {};
-		query[this.restAPIAttribute] = this.dataValues;
-		getEnititesUrl.query(query);
+
+		if(this.method === "get") {
+			const query: any = {};
+			query[this.restAPIAttribute] = this.dataValues;
+			getEnititesUrl.query(query);
+		}
+		else {
+			getEnititesUrl.send(this.dataValues);
+		}
 		const self: RestMapper<E, B> = this;
 
 		return new Promise<void>((resolve, reject) => {
