@@ -10,7 +10,7 @@ export interface IRestMapperOptions<E> {
 	restAPIAttribute: string;
 	restAPIURL: string;
 	mergeEntities(entity: E, possibleValue: any): void;
-	method: string | null;
+	method?: string;
 }
 
 export class RestMapper<E, B> {
