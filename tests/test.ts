@@ -3,6 +3,7 @@ import express, { Request, Response} from "express";
 import bodyParser from "body-parser";
 import {RevrestClient, IRevresetOptions,IRestMapperOptions, RestMapper, IDecorateRequest, ReverestRequest} from "./../src/index"
 import { Server } from "http";
+import ReverestError from "../src/ReverestError";
 const app = express()
 // support parsing of application/json type post data
 app.use(bodyParser.json());
@@ -71,14 +72,9 @@ app.get('/api/users', (req: Request, res: Response) => {
     }]);
 });
 
-const server: Server = app.listen(port, () => { console.log("http server started"); });
+const server: Server = app.listen(port);
 
-describe("tests", async function(): Promise<void> {
-    it("base", async() => {
-        const client: RevrestClient = new RevrestClient("http://localhost:3000/api/tags");
-        const result = await client.get();
-    });
-
+describe("tests", () => {
     it("Simple", async() => {
         const client: RevrestClient<ITagEntity, IBag> = new RevrestClient<ITagEntity, IBag>("http://localhost:3000/api/tags", new DecorateRequest());
         const result = await client.get({
@@ -146,7 +142,7 @@ describe("tests", async function(): Promise<void> {
                 }
             });
         } catch (error) {
-            
+            expect((error as ReverestError).status).to.equal(404);
         }
        
     });
