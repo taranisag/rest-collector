@@ -74,6 +74,10 @@ app.get('/api/users', (req: Request, res: Response) => {
 const server: Server = app.listen(port, () => { console.log("http server started"); });
 
 describe("tests", async function(): Promise<void> {
+    it("base", async() => {
+        const client: RevrestClient = new RevrestClient("http://localhost:3000/api/tags");
+        const result = await client.get();
+    });
 
     it("Simple", async() => {
         const client: RevrestClient<ITagEntity, IBag> = new RevrestClient<ITagEntity, IBag>("http://localhost:3000/api/tags", new DecorateRequest());
@@ -105,7 +109,7 @@ describe("tests", async function(): Promise<void> {
                     return entity;
                 }
             }
-        })
+        });
         const result = await client.get({
             bag:  { userId: "context1" }
         });

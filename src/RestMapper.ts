@@ -41,10 +41,12 @@ export class RestMapper<E, B> {
 		}
 	}
 
-	public async queryData(decorateCallback: IDecorateRequest<B>, bag: B): Promise<void> {
+	public async queryData(bag?: B, decorateCallback?: IDecorateRequest<B>): Promise<void> {
 		const req: ReverestRequest = new ReverestRequest();
 		var getEnititesUrl: any = unirest[this.method](this.restAPIURL);
-		decorateCallback.decorateRequest(req, bag);
+		if(decorateCallback) {
+			decorateCallback.decorateRequest(req, bag);
+		}
 
 		getEnititesUrl.headers(req.headers);
 

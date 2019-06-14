@@ -20,11 +20,11 @@ export interface IRevresetResult<E> {
     headers: any;
 }
 
-export class RevrestClient<E, B> {
+export class RevrestClient<E = any, B = any> {
     private mapperOptions: IRestMapperOptions<E>[];
-    private entityRestAPI: string;
+    private entityRestAPI?: string;
 
-    constructor(entityRestAPI: string, private decorateRequests: IDecorateRequest<B>) {
+    constructor(entityRestAPI?: string, private decorateRequests?: IDecorateRequest<B>) {
         this.mapperOptions = [];
         this.entityRestAPI = entityRestAPI;
     }
@@ -33,7 +33,7 @@ export class RevrestClient<E, B> {
         this.mapperOptions.push(mapperOption);
     }
 
-    public async fillData(entities: E[], options: any): Promise<any> {
+    protected async fillData(entities: E[], options: any): Promise<any> {
 
         const mappers: RestMapper<E, B>[] = this.mapperOptions.map(m => new RestMapper<E, B>(m));
 
@@ -45,7 +45,7 @@ export class RevrestClient<E, B> {
 
         var queryPromises: Promise<any>[] = [];
         mappers.forEach((currentMapper: RestMapper<E, B>) => {
-            queryPromises.push(currentMapper.queryData(this.decorateRequests, options));
+            queryPromises.push(currentMapper.queryData(options, this.decorateRequests));
         });
 
         await Promise.all(queryPromises);
@@ -59,7 +59,7 @@ export class RevrestClient<E, B> {
         return entities;
     }
 
-    public fillparams(url: string, params: any): string {
+    protected fillparams(url: string, params: any): string {
         const regExp: RegExp = /(\{[^}]+\})/g;
         const matches: RegExpMatchArray | null = url.match(regExp);
         if(matches!=null) {
@@ -85,7 +85,7 @@ export class RevrestClient<E, B> {
         return new Promise<any>((resolve, reject) => {
             var req: ReverestRequest = new ReverestRequest();
 
-            if (!options.url) {
+            if (!options.url && this.entityRestAPI) {
                 options.url = options.url || this.fillparams(this.entityRestAPI, options.params);
             }
     
@@ -126,14 +126,14 @@ export class RevrestClient<E, B> {
         });
     }
 
-    public async get(options: IRevresetOptions<B>): Promise<IRevresetResult<E>> {
+    public async get(options?: IRevresetOptions<B>): Promise<IRevresetResult<E>> {
         return this.sendRequest({
             ...options,
             method: "get"
         });
     }
 
-    public async post(options: IRevresetOptions<B>): Promise<IRevresetResult<E>> {
+    public async post(options?: IRevresetOptions<B>): Promise<IRevresetResult<E>> {
         const result: any = await this.sendRequest({
             ...options,
             method: "post"
@@ -142,7 +142,7 @@ export class RevrestClient<E, B> {
         return result;
     }
 
-    public async put(options: IRevresetOptions<B>): Promise<IRevresetResult<E>> {
+    public async put(options?: IRevresetOptions<B>): Promise<IRevresetResult<E>> {
         const result: any = await this.sendRequest({
             ...options,
             method: "put"
@@ -151,7 +151,7 @@ export class RevrestClient<E, B> {
         return result;
     }
 
-    public async delete(options: IRevresetOptions<B>): Promise<IRevresetResult<E>> {
+    public async delete(options?: IRevresetOptions<B>): Promise<IRevresetResult<E>> {
         const result: any = await this.sendRequest({
             ...options,
             method: "delete"
@@ -160,7 +160,7 @@ export class RevrestClient<E, B> {
         return result;
     }
 
-    public async patch(options: IRevresetOptions<B>): Promise<IRevresetResult<E>> {
+    public async patch(options?: IRevresetOptions<B>): Promise<IRevresetResult<E>> {
         const result: any = await this.sendRequest({
             ...options,
             method: "patch"
