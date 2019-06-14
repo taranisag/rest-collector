@@ -99,6 +99,19 @@ app.get('/api/users-courses', (req: Request, res: Response) => {
     ]);
 });
 
+app.get('/api/users-courses', (req: Request, res: Response) => {
+    res.send([
+        {
+            user: 3,
+            course: 'Chemistry',
+        },
+        {
+            user: 4,
+            course: 'Biology',
+        },
+    ]);
+});
+
 const server: Server = app.listen(port);
 
 describe('tests', () => {
