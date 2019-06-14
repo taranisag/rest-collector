@@ -1,6 +1,6 @@
 "use strict";
 
-const unirest: any = require("unirest");
+const superagent = require('superagent');
 import {RestMapper, IRestMapperOptions} from "./RestMapper";
 import { IDecorateRequest } from "./IDecorateRequest";
 import { ReverestRequest } from "./ReverestRequest";
@@ -15,7 +15,7 @@ export interface IRevresetOptions<B> {
     data?: any;
 }
 
-export interface IRevresetResult<E> {
+export interface IRevresetResult<E = any> {
     data: E;
     headers: any;
 }
@@ -45,7 +45,7 @@ export class RevrestClient<E = any, B = any> {
 
         var queryPromises: Promise<any>[] = [];
         mappers.forEach((currentMapper: RestMapper<E, B>) => {
-            queryPromises.push(currentMapper.queryData(options, this.decorateRequests));
+            queryPromises.push(currentMapper.queryData(options.bag, this.decorateRequests));
         });
 
         await Promise.all(queryPromises);
@@ -88,8 +88,9 @@ export class RevrestClient<E = any, B = any> {
             if (!options.url && this.entityRestAPI) {
                 options.url = options.url || this.fillparams(this.entityRestAPI, options.params);
             }
-    
-            var httpreq:any = unirest[options.method!](options.url);
+            
+            //@ts-ignore
+            var httpreq:any = superagent[options.method!](options.url);
     
             if (options && options.query) {
                 httpreq.query(options.query);
@@ -101,9 +102,12 @@ export class RevrestClient<E = any, B = any> {
             }
     
             // initialize final cookies before sending a request to the remote server
-            httpreq.headers(req.headers);
+            for (let [key, value] of Object.entries(req.headers)) {
+                httpreq.set({[key]: value});
+            }
+            
             httpreq.send(options.data);
-            httpreq.end((response: any) => {
+            httpreq.end((err: any, response: any) => {
                 if (response.status < 300) {
                     var promise: Promise<any> | null = null;
                     var isArray: boolean = Array.isArray(response.body);

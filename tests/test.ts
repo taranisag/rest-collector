@@ -1,7 +1,7 @@
 import { expect, assert } from "chai";
 import express, { Request, Response} from "express";
 import bodyParser from "body-parser";
-import {RevrestClient, IRevresetOptions,IRestMapperOptions, RestMapper, IDecorateRequest, ReverestRequest} from "./../src/index"
+import {RevrestClient, IRevresetOptions,IRestMapperOptions, RestMapper, IDecorateRequest, ReverestRequest} from "../src/index"
 import { Server } from "http";
 import ReverestError from "../src/ReverestError";
 const app = express()
