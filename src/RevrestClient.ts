@@ -15,7 +15,7 @@ export interface IRevresetOptions<B> {
     data?: any;
 }
 
-export interface IRevresetResult<E> {
+export interface IRevresetResult<E = any> {
     data: E;
     headers: any;
 }
