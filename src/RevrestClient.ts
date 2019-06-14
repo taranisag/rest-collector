@@ -4,7 +4,7 @@ const unirest: any = require("unirest");
 import {RestMapper, IRestMapperOptions} from "./RestMapper";
 import { IDecorateRequest } from "./IDecorateRequest";
 import { ReverestRequest } from "./ReverestRequest";
-import RevrestError from "./RevrestError";
+import ReverestError from "./ReverestError";
 
 export interface IRevresetOptions<B> {
     query?: any;
@@ -120,7 +120,7 @@ export class RevrestClient<E = any, B = any> {
                         });
                     }).catch(reject);                   
                 } else {
-                    reject(new RevrestError(options.url!, response.status, response.body, options.query, options.data));
+                    reject(new ReverestError(options.url!, response.status, response.body, options.query, options.data));
                 }
             });
         });
