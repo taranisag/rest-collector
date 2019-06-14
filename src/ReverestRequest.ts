@@ -1,8 +1,8 @@
 export class ReverestRequest {
     public headers: any;
-    constructor() {
+    public constructor() {
         this.headers = {
-            "Content-Type": "application/json"
+            'Content-Type': 'application/json',
         };
     }
 }
