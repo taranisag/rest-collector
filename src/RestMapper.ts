@@ -2,7 +2,7 @@
 
 import { IDecorateRequest } from "./IDecorateRequest";
 import { ReverestRequest } from "./ReverestRequest";
-const unirest: any = require("unirest");
+const superagent = require('superagent');
 
 
 export interface IRestMapperOptions<E> {
@@ -43,12 +43,15 @@ export class RestMapper<E, B> {
 
 	public async queryData(bag?: B, decorateCallback?: IDecorateRequest<B>): Promise<void> {
 		const req: ReverestRequest = new ReverestRequest();
-		var getEnititesUrl: any = unirest[this.method](this.restAPIURL);
+		//@ts-ignore
+		var getEnititesUrl: any = superagent[this.method](this.restAPIURL);
 		if(decorateCallback) {
 			decorateCallback.decorateRequest(req, bag);
 		}
 
-		getEnititesUrl.headers(req.headers);
+		for (let [key, value] of Object.entries(req.headers)) {
+			getEnititesUrl.set({[key]: value});
+		}
 
 		if(this.method === "get") {
 			const query: any = {};
@@ -61,7 +64,7 @@ export class RestMapper<E, B> {
 		const self: RestMapper<E, B> = this;
 
 		return new Promise<void>((resolve, reject) => {
-			getEnititesUrl.end(function(response: any): void {
+			getEnititesUrl.end(function(err: any, response: any): void {
 				if(response.status < 300) {
 					response.body.forEach((record: any) => {
 						self.dataLookup[record[self.restAPIAttribute]] = record;
