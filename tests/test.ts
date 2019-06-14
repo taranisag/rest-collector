@@ -229,7 +229,7 @@ describe('tests', () => {
             'http://localhost:3000/api/logins/{id}',
             new DecorateRequest(),
         );
-        const result = await client.post({
+        await client.post({
             bag: { userId: 'user34' },
             data: {
                 userId: 3,
@@ -243,7 +243,7 @@ describe('tests', () => {
                 'http://localhost:3000/api/logins/{id}',
                 new DecorateRequest(),
             );
-            const result = await client.get({
+            await client.get({
                 bag: { userId: 'user34' },
                 params: {
                     id: 334343,
