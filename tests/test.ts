@@ -17,10 +17,20 @@ interface IBaseEntity {
     course?: string;
 }
 
+interface ILoginsEntity {
+    id: number,
+    userId: number,
+    loginTime: number
+}
+
 interface IUserEntity {
     id: number;
     email: string;
-    course?: string;
+}
+
+interface IUserCourseEntity {
+    user: number;
+    course: string;
 }
 
 interface IBag {
@@ -33,33 +43,35 @@ class DecorateRequest implements IDecorateRequest<IBag>{
     }
 }
 
-const tagEntitiesArray = [{
+const loginsEntitiesArray: ILoginsEntity[] = [{
     id: 1,
-    userId: 3
+    userId: 3,
+    loginTime: 1560518174
 },
 {
     id: 2,
-    userId: 4
+    userId: 4,
+    loginTime: 1560172574
 }];
-app.get('/api/tags/:id(\\d+)', (req: Request, res: Response) => {
-    res.send(tagEntitiesArray.filter(x=> x.id ===  +req.params.id));
+app.get('/api/logins/:id(\\d+)', (req: Request, res: Response) => {
+    res.send(loginsEntitiesArray.filter(x=> x.id ===  +req.params.id));
 });
 
 
-app.post('/api/tags', (req: Request, res: Response) => {
+app.post('/api/logins', (req: Request, res: Response) => {
     
-    var indexOfMaxValue = tagEntitiesArray.map(x=> x.id).reduce((iMax, x, i, arr) => x > arr[iMax] ? i : iMax, 0);
-    const newTag = {
+    var indexOfMaxValue = loginsEntitiesArray.map(x=> x.id).reduce((iMax, x, i, arr) => x > arr[iMax] ? i : iMax, 0);
+    const newLogin = {
         ...req.body,
         id: indexOfMaxValue++
     };
-    tagEntitiesArray.push(newTag);
-    res.send(newTag);
+    loginsEntitiesArray.push(newLogin);
+    res.send(newLogin);
 });
 
 
-app.get('/api/tags', (req: Request, res: Response) => {
-    res.send(tagEntitiesArray);
+app.get('/api/logins', (req: Request, res: Response) => {
+    res.send(loginsEntitiesArray);
 });
 
 
@@ -76,12 +88,10 @@ app.get('/api/users', (req: Request, res: Response) => {
 
 app.get('/api/users-courses', (req: Request, res: Response) => {
     res.send([{
-        id: 1,
         user: 3,
         course: "Chemistry"
     },
     {
-        id: 2,
         user: 4,
         course: "Biology"
     }]);
@@ -91,25 +101,25 @@ const server: Server = app.listen(port);
 
 describe("tests", () => {
     it("Simple", async() => {
-        const client: RevrestClient<IBaseEntity, IBag> = new RevrestClient<IBaseEntity, IBag>("http://localhost:3000/api/tags", new DecorateRequest());
+        const client: RevrestClient<IBaseEntity, IBag> = new RevrestClient<IBaseEntity, IBag>("http://localhost:3000/api/logins", new DecorateRequest());
         const result = await client.get({
             bag:  { userId: "user34" }
         });
 
-        expect(result.data).to.deep.equal(tagEntitiesArray)
+        expect(result.data).to.deep.equal(loginsEntitiesArray)
     });
 
     it("Simple by id", async() => {
-        const client: RevrestClient<IBaseEntity, IBag> = new RevrestClient<IBaseEntity, IBag>("http://localhost:3000/api/tags/{id}", new DecorateRequest());
+        const client: RevrestClient<IBaseEntity, IBag> = new RevrestClient<IBaseEntity, IBag>("http://localhost:3000/api/logins/{id}", new DecorateRequest());
         const result = await client.get({
             params: { id: 1 },
             bag:  { userId: "user34" }
         });
-        expect(result.data).to.deep.equal(tagEntitiesArray.filter(x=> x.id ===  1))
+        expect(result.data).to.deep.equal(loginsEntitiesArray.filter(x=> x.id ===  1))
     });
 
     it("Simple With forigen keys", async() => {
-        const client: RevrestClient<IBaseEntity, IBag> = new RevrestClient<IBaseEntity, IBag>("http://localhost:3000/api/tags", new DecorateRequest());
+        const client: RevrestClient<IBaseEntity, IBag> = new RevrestClient<IBaseEntity, IBag>("http://localhost:3000/api/logins", new DecorateRequest());
         client.addMapper({
             entityAttribute: "userId",
             restAPIAttribute: "id",
@@ -128,17 +138,19 @@ describe("tests", () => {
         expect(result.data).to.deep.equal([{
             id: 1,
             userId: 3,
-            email: "user3@taranis.ag"
+            email: "user3@taranis.ag",
+            loginTime: 1560518174
         },
         {
             id: 2,
             userId: 4,
-            email: "user4@taranis.ag"
+            email: "user4@taranis.ag",
+            loginTime: 1560172574
         }]);
     });
 
     it("Multiple mappers", async() => {
-        const client: RevrestClient<IBaseEntity, IBag> = new RevrestClient<IBaseEntity, IBag>("http://localhost:3000/api/tags", new DecorateRequest());
+        const client: RevrestClient<IBaseEntity, IBag> = new RevrestClient<IBaseEntity, IBag>("http://localhost:3000/api/logins", new DecorateRequest());
         client.addMapper({
             entityAttribute: "userId",
             restAPIAttribute: "id",
@@ -154,7 +166,7 @@ describe("tests", () => {
             entityAttribute: "userId",
             restAPIAttribute: "user",
             restAPIURL: "http://localhost:3000/api/users-courses",
-            mergeEntities: (entity: IBaseEntity, possibleValue: IUserEntity) => {
+            mergeEntities: (entity: IBaseEntity, possibleValue: IUserCourseEntity) => {
                 if(possibleValue) {
                     entity.course = possibleValue.course;
                     return entity;
@@ -169,18 +181,20 @@ describe("tests", () => {
             id: 1,
             userId: 3,
             email: "user3@taranis.ag",
-            course: "Chemistry"
+            course: "Chemistry",
+            loginTime: 1560518174
         },
         {
             id: 2,
             userId: 4,
             email: "user4@taranis.ag",
-            course: "Biology"
+            course: "Biology",
+            loginTime: 1560172574
         }]);
     });
 
     it("simple post", async() => {
-        const client: RevrestClient<IBaseEntity, IBag> = new RevrestClient<IBaseEntity, IBag>("http://localhost:3000/api/tags/{id}", new DecorateRequest());
+        const client: RevrestClient<IBaseEntity, IBag> = new RevrestClient<IBaseEntity, IBag>("http://localhost:3000/api/logins/{id}", new DecorateRequest());
         const result = await client.post({
             bag:  { userId: "user34" },
             data: {
@@ -191,7 +205,7 @@ describe("tests", () => {
 
     it("get error - 404", async() => {
         try {
-            const client: RevrestClient<IBaseEntity, IBag> = new RevrestClient<IBaseEntity, IBag>("http://localhost:3000/api/tagsdss/{id}", new DecorateRequest());
+            const client: RevrestClient<IBaseEntity, IBag> = new RevrestClient<IBaseEntity, IBag>("http://localhost:3000/api/logins/{id}", new DecorateRequest());
             const result = await client.get({
                 bag:  { userId: "user34" },
                 params: {
