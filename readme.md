@@ -1,5 +1,5 @@
 # Reverest
-
+> Reverest is an http library that allows you to merge data from multiple api endpoints. By adding multiple mappers (explenation bellow), the library allows you to join data from multiple sources into a single entity.
 ## Installing
 ``` bash
 $ npm install reverest
@@ -56,7 +56,7 @@ const result: IRevresetResult = await client.delete({
 });
 ```
 ### Adding Mappers
-When using microservices architecture you will need to join entities in application level.
+When using microservices architecture you will need to join data from entities in the application level.
 ```typescript
 const client: RevrestClient = new RevrestClient("http://server/api/entity/{id}");
 client.addMapper({

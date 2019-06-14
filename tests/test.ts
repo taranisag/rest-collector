@@ -10,15 +10,17 @@ app.use(bodyParser.json());
 const port = 3000;
 
 
-interface ITagEntity {
+interface IBaseEntity {
     id: number;
     userId: number;
     email?: string;
+    course?: string;
 }
 
 interface IUserEntity {
     id: number;
     email: string;
+    course?: string;
 }
 
 interface IBag {
@@ -72,11 +74,24 @@ app.get('/api/users', (req: Request, res: Response) => {
     }]);
 });
 
+app.get('/api/users-courses', (req: Request, res: Response) => {
+    res.send([{
+        id: 1,
+        user: 3,
+        course: "Chemistry"
+    },
+    {
+        id: 2,
+        user: 4,
+        course: "Biology"
+    }]);
+});
+
 const server: Server = app.listen(port);
 
 describe("tests", () => {
     it("Simple", async() => {
-        const client: RevrestClient<ITagEntity, IBag> = new RevrestClient<ITagEntity, IBag>("http://localhost:3000/api/tags", new DecorateRequest());
+        const client: RevrestClient<IBaseEntity, IBag> = new RevrestClient<IBaseEntity, IBag>("http://localhost:3000/api/tags", new DecorateRequest());
         const result = await client.get({
             bag:  { userId: "user34" }
         });
@@ -85,7 +100,7 @@ describe("tests", () => {
     });
 
     it("Simple by id", async() => {
-        const client: RevrestClient<ITagEntity, IBag> = new RevrestClient<ITagEntity, IBag>("http://localhost:3000/api/tags/{id}", new DecorateRequest());
+        const client: RevrestClient<IBaseEntity, IBag> = new RevrestClient<IBaseEntity, IBag>("http://localhost:3000/api/tags/{id}", new DecorateRequest());
         const result = await client.get({
             params: { id: 1 },
             bag:  { userId: "user34" }
@@ -94,12 +109,12 @@ describe("tests", () => {
     });
 
     it("Simple With forigen keys", async() => {
-        const client: RevrestClient<ITagEntity, IBag> = new RevrestClient<ITagEntity, IBag>("http://localhost:3000/api/tags", new DecorateRequest());
+        const client: RevrestClient<IBaseEntity, IBag> = new RevrestClient<IBaseEntity, IBag>("http://localhost:3000/api/tags", new DecorateRequest());
         client.addMapper({
             entityAttribute: "userId",
             restAPIAttribute: "id",
             restAPIURL: "http://localhost:3000/api/users",
-            mergeEntities: (entity: ITagEntity, possibleValue: IUserEntity) => {
+            mergeEntities: (entity: IBaseEntity, possibleValue: IUserEntity) => {
                 if(possibleValue) {
                     entity.email = possibleValue.email;
                     return entity;
@@ -122,8 +137,50 @@ describe("tests", () => {
         }]);
     });
 
+    it("Multiple mappers", async() => {
+        const client: RevrestClient<IBaseEntity, IBag> = new RevrestClient<IBaseEntity, IBag>("http://localhost:3000/api/tags", new DecorateRequest());
+        client.addMapper({
+            entityAttribute: "userId",
+            restAPIAttribute: "id",
+            restAPIURL: "http://localhost:3000/api/users",
+            mergeEntities: (entity: IBaseEntity, possibleValue: IUserEntity) => {
+                if(possibleValue) {
+                    entity.email = possibleValue.email;
+                    return entity;
+                }
+            }
+        });
+        client.addMapper({
+            entityAttribute: "userId",
+            restAPIAttribute: "user",
+            restAPIURL: "http://localhost:3000/api/users-courses",
+            mergeEntities: (entity: IBaseEntity, possibleValue: IUserEntity) => {
+                if(possibleValue) {
+                    entity.course = possibleValue.course;
+                    return entity;
+                }
+            }
+        });
+        const result = await client.get({
+            bag:  { userId: "context1" }
+        });
+
+        expect(result.data).to.deep.equal([{
+            id: 1,
+            userId: 3,
+            email: "user3@taranis.ag",
+            course: "Chemistry"
+        },
+        {
+            id: 2,
+            userId: 4,
+            email: "user4@taranis.ag",
+            course: "Biology"
+        }]);
+    });
+
     it("simple post", async() => {
-        const client: RevrestClient<ITagEntity, IBag> = new RevrestClient<ITagEntity, IBag>("http://localhost:3000/api/tags/{id}", new DecorateRequest());
+        const client: RevrestClient<IBaseEntity, IBag> = new RevrestClient<IBaseEntity, IBag>("http://localhost:3000/api/tags/{id}", new DecorateRequest());
         const result = await client.post({
             bag:  { userId: "user34" },
             data: {
@@ -134,7 +191,7 @@ describe("tests", () => {
 
     it("get error - 404", async() => {
         try {
-            const client: RevrestClient<ITagEntity, IBag> = new RevrestClient<ITagEntity, IBag>("http://localhost:3000/api/tagsdss/{id}", new DecorateRequest());
+            const client: RevrestClient<IBaseEntity, IBag> = new RevrestClient<IBaseEntity, IBag>("http://localhost:3000/api/tagsdss/{id}", new DecorateRequest());
             const result = await client.get({
                 bag:  { userId: "user34" },
                 params: {
