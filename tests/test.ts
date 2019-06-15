@@ -74,7 +74,7 @@ app.get('/api/logins', (req: Request, res: Response) => {
 });
 
 app.get('/api/users', (req: Request, res: Response) => {
-    res.send([
+    const users = [
         {
             id: 3,
             email: 'user3@taranis.ag',
@@ -83,11 +83,13 @@ app.get('/api/users', (req: Request, res: Response) => {
             id: 4,
             email: 'user4@taranis.ag',
         },
-    ]);
+    ];
+    const usersToSend = users.filter(u => req.query.id.includes(u.id.toString()));
+    res.send(usersToSend);
 });
 
-app.get('/api/users-courses', (req: Request, res: Response) => {
-    res.send([
+app.post('/api/users-courses', (req: Request, res: Response) => {
+    const userCourses = [
         {
             user: 3,
             course: 'Chemistry',
@@ -96,7 +98,13 @@ app.get('/api/users-courses', (req: Request, res: Response) => {
             user: 4,
             course: 'Biology',
         },
-    ]);
+        {
+            user: 5,
+            course: 'Mathematics',
+        },
+    ];
+    const usersCoursesToSend = userCourses.filter(u => req.body.users.includes(u.user));
+    res.send(usersCoursesToSend);
 });
 
 app.get('/api/users-courses', (req: Request, res: Response) => {
@@ -195,6 +203,13 @@ describe('tests', () => {
             entityAttribute: 'userId',
             restAPIAttribute: 'user',
             restAPIURL: 'http://localhost:3000/api/users-courses',
+            method: 'post',
+            before: payload => {
+                return {
+                    otherData: [1, 2, 3],
+                    users: payload,
+                };
+            },
             mergeEntities: (entity: BaseEntity, possibleValue: UserCourseEntity) => {
                 if (possibleValue) {
                     entity.course = possibleValue.course;
