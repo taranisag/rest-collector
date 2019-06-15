@@ -246,7 +246,6 @@ describe('tests', () => {
         });
         const result = await client.get({
             bag: { userId: 'context1' },
-            retry: true,
         });
 
         expect(result.data).to.deep.equal([
