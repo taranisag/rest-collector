@@ -54,10 +54,10 @@ export class RevrestClient<E = any, B = any> {
 
         var queryPromises: Promise<any>[] = [];
         mappers.forEach((currentMapper: RestMapper<E, B>) => {
-            if (options.retry) {
+            if (currentMapper.retry) {
                 queryPromises.push(
-                    pRetry(currentMapper.queryData.bind(this, options.bag, this.decorateRequests), {
-                        ...options.retry,
+                    pRetry(currentMapper.queryData.bind(currentMapper, options.bag, this.decorateRequests), {
+                        ...currentMapper.retry,
                     }),
                 );
             } else {

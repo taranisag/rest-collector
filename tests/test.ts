@@ -217,7 +217,7 @@ describe('tests', () => {
             });
             console.log(result);
         } catch (ex) {
-            expect(ex).to.be.an.instanceof(Error);
+            expect(ex).to.be.an.instanceof(ReverestError);
         }
     });
 
@@ -238,16 +238,16 @@ describe('tests', () => {
                         return entity;
                     }
                 },
-            });
-            const result = await client.get({
-                bag: { userId: 'context1' },
                 retry: {
                     retries: 1,
                 },
             });
+            const result = await client.get({
+                bag: { userId: 'context1' },
+            });
             console.log(result);
         } catch (ex) {
-            expect(ex).to.be.an.instanceof(Error);
+            expect(ex).to.be.an.instanceof(ReverestError);
         }
     });
 
