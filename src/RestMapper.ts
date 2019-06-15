@@ -9,6 +9,7 @@ export interface RestMapperOptions<E> {
     restAPIAttribute: string;
     restAPIURL: string;
     mergeEntities(entity: E, possibleValue: any): void;
+    before?(payload: any): any;
     method?: string;
 }
 
@@ -18,7 +19,8 @@ export class RestMapper<E, B> {
     private restAPIURL: string;
     private dataValues: any[] = [];
     private mergeEntities: (entity: E, possibleValue: any) => void;
-    public dataLookup: any;
+    private before: (payload: any) => any;
+    private dataLookup: any;
     private method: string;
 
     public constructor(options: RestMapperOptions<E>) {
@@ -27,6 +29,7 @@ export class RestMapper<E, B> {
         this.restAPIURL = options.restAPIURL;
         this.dataLookup = {};
         this.mergeEntities = options.mergeEntities;
+        this.before = options.before || ((payload: any) => payload);
         this.method = options.method || 'get';
     }
 
@@ -51,20 +54,20 @@ export class RestMapper<E, B> {
             getEnititesUrl.set({ [key]: value });
         }
 
-        if (this.method === 'get') {
-            const query: any = {};
+        if (this.method.toLowerCase() === 'get') {
+            let query: any = {};
             query[this.restAPIAttribute] = this.dataValues;
+            query = this.before(query);
             getEnititesUrl.query(query);
         } else {
+            this.dataValues = this.before(this.dataValues);
             getEnititesUrl.send(this.dataValues);
         }
-        const self: RestMapper<E, B> = this;
-
         return new Promise<void>((resolve, reject) => {
-            getEnititesUrl.end(function(err: any, response: any): void {
+            getEnititesUrl.end((err: any, response: any) => {
                 if (response.status < 300) {
                     response.body.forEach((record: any) => {
-                        self.dataLookup[record[self.restAPIAttribute]] = record;
+                        this.dataLookup[record[this.restAPIAttribute]] = record;
                     });
                     resolve();
                 } else {
