@@ -213,6 +213,10 @@ describe('tests', () => {
                 bag: { userId: 'context1' },
                 retry: {
                     retries: 1,
+                    onFailedAttempt: error => {
+                        expect([1, 2]).to.include(error.attemptNumber);
+                        expect([1, 0]).to.include(error.retriesLeft);
+                    },
                 },
             });
             console.log(result);
@@ -240,6 +244,10 @@ describe('tests', () => {
                 },
                 retry: {
                     retries: 1,
+                    onFailedAttempt: error => {
+                        expect([1, 2]).to.include(error.attemptNumber);
+                        expect([1, 0]).to.include(error.retriesLeft);
+                    },
                 },
             });
             const result = await client.get({
