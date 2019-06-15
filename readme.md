@@ -88,7 +88,7 @@ addMapper api:
 * `restAPIAttribute`: The attribute of the other api on which the joining of the data will take place.
 * `restAPIURL`: The endpoint of the other api.
 * `before?`: optional - a function which receives the query(get method) or payload (other http methods) and returns a new query/payload to be sent to the other api. This is usefull when you need to adjust the query/payload that you send to the api.
-* `method?`: optional - the htto method for the second api. Defaults to `get`.
+* `method?`: optional - the http method for the second api. Defaults to `get`.
 
 You can add more than one mapper to join data from more than one other api.
 
