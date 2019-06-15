@@ -73,6 +73,14 @@ app.get('/api/logins', (req: Request, res: Response) => {
     res.send(loginsEntitiesArray);
 });
 
+app.get('/api/loginsFail', (req: Request, res: Response) => {
+    res.sendStatus(500);
+});
+
+app.get('/api/usersFail', (req: Request, res: Response) => {
+    res.sendStatus(500);
+});
+
 app.get('/api/users', (req: Request, res: Response) => {
     const users = [
         {
@@ -181,6 +189,25 @@ describe('tests', () => {
                 loginTime: 1560172574,
             },
         ]);
+    });
+
+    it('With retries on base api', async () => {
+        const client: RevrestClient<BaseEntity, Bag> = new RevrestClient<BaseEntity, Bag>(
+            'http://localhost:3000/api/loginsFail',
+            new DecorateRequest(),
+        );
+
+        try {
+            const result = await client.get({
+                bag: { userId: 'context1' },
+                retry: {
+                    retries: 1,
+                },
+            });
+            console.log(result);
+        } catch (ex) {
+            expect(ex).to.be.an.instanceof(Error);
+        }
     });
 
     it('Multiple mappers', async () => {

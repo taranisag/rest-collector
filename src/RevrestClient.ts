@@ -5,6 +5,12 @@ import { RestMapper, RestMapperOptions } from './RestMapper';
 import { DecorateRequest } from './DecorateRequest';
 import { ReverestRequest } from './ReverestRequest';
 import ReverestError from './ReverestError';
+import pRetry from 'p-retry';
+
+export interface Retries {
+    retries: number;
+    onFailedAttempt?: (error: any) => void;
+}
 
 export interface RevresetOptions<B> {
     query?: any;
@@ -13,6 +19,8 @@ export interface RevresetOptions<B> {
     url?: string;
     bag?: B;
     data?: any;
+    timeout?: any;
+    retry?: Retries;
 }
 
 export interface RevresetResult<E = any> {
@@ -106,9 +114,10 @@ export class RevrestClient<E = any, B = any> {
                 httpreq.set({ [key]: value });
             }
 
+            options.timeout && httpreq.timeout(options.timeout);
             httpreq.send(options.data);
             httpreq.end((err: any, response: any) => {
-                if (response.status < 300) {
+                if (response && response.status < 300) {
                     var promise: Promise<any> | null = null;
                     var isArray: boolean = Array.isArray(response.body);
                     if (isArray) {
@@ -127,53 +136,45 @@ export class RevrestClient<E = any, B = any> {
                         .catch(reject);
                 } else {
                     reject(
-                        new ReverestError(options.url!, response.status, response.body, options.query, options.data),
+                        new ReverestError(
+                            options.url!,
+                            response ? response.status : err.toString(),
+                            response ? response.body : err.toString(),
+                            options.query,
+                            options.data,
+                        ),
                     );
                 }
             });
         });
     }
 
+    private async sendRetriedRequest(method: string, options?: RevresetOptions<B>): Promise<RevresetResult<E>> {
+        const allOptions = options || {};
+        const { retry, ...reverestOptions } = allOptions;
+        if (retry) {
+            return pRetry(this.sendRequest.bind(this, { ...reverestOptions, method: method }), { ...retry });
+        }
+        return this.sendRequest({ ...reverestOptions, method: method });
+    }
+
     public async get(options?: RevresetOptions<B>): Promise<RevresetResult<E>> {
-        return this.sendRequest({
-            ...options,
-            method: 'get',
-        });
+        return this.sendRetriedRequest('get', options);
     }
 
     public async post(options?: RevresetOptions<B>): Promise<RevresetResult<E>> {
-        const result: any = await this.sendRequest({
-            ...options,
-            method: 'post',
-        });
-
-        return result;
+        return this.sendRetriedRequest('post', options);
     }
 
     public async put(options?: RevresetOptions<B>): Promise<RevresetResult<E>> {
-        const result: any = await this.sendRequest({
-            ...options,
-            method: 'put',
-        });
-
-        return result;
+        return this.sendRetriedRequest('put', options);
     }
 
     public async delete(options?: RevresetOptions<B>): Promise<RevresetResult<E>> {
-        const result: any = await this.sendRequest({
-            ...options,
-            method: 'delete',
-        });
-
-        return result;
+        return this.sendRetriedRequest('delete', options);
     }
 
     public async patch(options?: RevresetOptions<B>): Promise<RevresetResult<E>> {
-        const result: any = await this.sendRequest({
-            ...options,
-            method: 'patch',
-        });
-
-        return result;
+        return this.sendRetriedRequest('patch', options);
     }
 }
