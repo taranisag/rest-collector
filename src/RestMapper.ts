@@ -14,6 +14,7 @@ export interface RestMapperOptions<E> {
     before?(payload: any): any;
     method?: string;
     retry?: Retries;
+    timeout?: any;
 }
 
 export class RestMapper<E, B> {
@@ -25,6 +26,7 @@ export class RestMapper<E, B> {
     private before: (payload: any) => any;
     private dataLookup: any;
     private method: string;
+    private timeout?: any;
     public retry?: Retries;
 
     public constructor(options: RestMapperOptions<E>) {
@@ -35,6 +37,7 @@ export class RestMapper<E, B> {
         this.mergeEntities = options.mergeEntities;
         this.before = options.before || ((payload: any) => payload);
         this.method = options.method || 'get';
+        this.timeout = options.timeout || undefined;
         this.retry = options.retry || undefined;
     }
 
@@ -59,6 +62,9 @@ export class RestMapper<E, B> {
             for (let [key, value] of Object.entries(req.headers)) {
                 getEnititesUrl.set({ [key]: value });
             }
+
+            this.timeout && getEnititesUrl.timeout(this.timeout);
+
             let query: any = {};
             if (this.method.toLowerCase() === 'get') {
                 query[this.restAPIAttribute] = this.dataValues;
