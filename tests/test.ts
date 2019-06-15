@@ -191,13 +191,24 @@ describe('tests', () => {
         ]);
     });
 
-    it('With retries on base api', async () => {
+    it('With retries when base api fails', async () => {
         const client: RevrestClient<BaseEntity, Bag> = new RevrestClient<BaseEntity, Bag>(
             'http://localhost:3000/api/loginsFail',
             new DecorateRequest(),
         );
 
         try {
+            client.addMapper({
+                entityAttribute: 'userId',
+                restAPIAttribute: 'id',
+                restAPIURL: 'http://localhost:3000/api/usersFail',
+                mergeEntities: (entity: BaseEntity, possibleValue: UserEntity) => {
+                    if (possibleValue) {
+                        entity.email = possibleValue.email;
+                        return entity;
+                    }
+                },
+            });
             const result = await client.get({
                 bag: { userId: 'context1' },
                 retry: {
@@ -206,7 +217,37 @@ describe('tests', () => {
             });
             console.log(result);
         } catch (ex) {
-            expect(ex).to.be.an.instanceof(Error);
+            expect(ex).to.be.an.instanceof(ReverestError);
+        }
+    });
+
+    it('With retries when mapper api fails', async () => {
+        const client: RevrestClient<BaseEntity, Bag> = new RevrestClient<BaseEntity, Bag>(
+            'http://localhost:3000/api/logins',
+            new DecorateRequest(),
+        );
+
+        try {
+            client.addMapper({
+                entityAttribute: 'userId',
+                restAPIAttribute: 'id',
+                restAPIURL: 'http://localhost:3000/api/usersFail',
+                mergeEntities: (entity: BaseEntity, possibleValue: UserEntity) => {
+                    if (possibleValue) {
+                        entity.email = possibleValue.email;
+                        return entity;
+                    }
+                },
+                retry: {
+                    retries: 1,
+                },
+            });
+            const result = await client.get({
+                bag: { userId: 'context1' },
+            });
+            console.log(result);
+        } catch (ex) {
+            expect(ex).to.be.an.instanceof(ReverestError);
         }
     });
 

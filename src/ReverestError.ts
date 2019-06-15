@@ -6,6 +6,6 @@ export default class ReverestError extends Error {
         public readonly query: any,
         public readonly data: any,
     ) {
-        super(`Request failed with status code ${status}`);
+        super(`Request to url ${url} failed with status code ${status}`);
     }
 }
