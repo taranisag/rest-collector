@@ -151,3 +151,5 @@ const result = await client.get({
     bag: { transactionid = "transactionid" }
 });
 ```
+
+### More Usage Examples - https://github.com/taranisag/reverest/blob/master/tests/test.ts
