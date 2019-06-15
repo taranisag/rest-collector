@@ -6,9 +6,9 @@ import { DecorateRequest } from './DecorateRequest';
 import { ReverestRequest } from './ReverestRequest';
 import ReverestError from './ReverestError';
 import pRetry from 'p-retry';
+import { TimeoutsOptions } from 'retry';
 
-export interface Retries {
-    retries: number;
+export interface Retries extends TimeoutsOptions {
     onFailedAttempt?: (error: any) => void;
 }
 
@@ -54,7 +54,15 @@ export class RevrestClient<E = any, B = any> {
 
         var queryPromises: Promise<any>[] = [];
         mappers.forEach((currentMapper: RestMapper<E, B>) => {
-            queryPromises.push(currentMapper.queryData(options.bag, this.decorateRequests));
+            if (options.retry) {
+                queryPromises.push(
+                    pRetry(currentMapper.queryData.bind(this, options.bag, this.decorateRequests), {
+                        ...options.retry,
+                    }),
+                );
+            } else {
+                queryPromises.push(currentMapper.queryData(options.bag, this.decorateRequests));
+            }
         });
 
         await Promise.all(queryPromises);

@@ -3,6 +3,7 @@
 import { DecorateRequest } from './DecorateRequest';
 import { ReverestRequest } from './ReverestRequest';
 import superagent from 'superagent';
+import ReverestError from './ReverestError';
 
 export interface RestMapperOptions<E> {
     entityAttribute: string;
@@ -53,9 +54,8 @@ export class RestMapper<E, B> {
         for (let [key, value] of Object.entries(req.headers)) {
             getEnititesUrl.set({ [key]: value });
         }
-
+        let query: any = {};
         if (this.method.toLowerCase() === 'get') {
-            let query: any = {};
             query[this.restAPIAttribute] = this.dataValues;
             query = this.before(query);
             getEnititesUrl.query(query);
@@ -65,13 +65,21 @@ export class RestMapper<E, B> {
         }
         return new Promise<void>((resolve, reject) => {
             getEnititesUrl.end((err: any, response: any) => {
-                if (response.status < 300) {
+                if (response && response.status < 300) {
                     response.body.forEach((record: any) => {
                         this.dataLookup[record[this.restAPIAttribute]] = record;
                     });
                     resolve();
                 } else {
-                    reject(response);
+                    reject(
+                        new ReverestError(
+                            this.restAPIURL,
+                            response ? response.status : err.toString(),
+                            response ? response.body : err.toString(),
+                            query,
+                            this.dataValues,
+                        ),
+                    );
                 }
             });
         });
