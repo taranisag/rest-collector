@@ -1,40 +1,49 @@
-"use strict";
+'use strict';
 
-const unirest: any = require("unirest");
-import {RestMapper, IRestMapperOptions} from "./RestMapper";
-import { IDecorateRequest } from "./IDecorateRequest";
-import { ReverestRequest } from "./ReverestRequest";
-import RevrestError from "./RevrestError";
+import superagent from 'superagent';
+import { RestMapper, RestMapperOptions } from './RestMapper';
+import { DecorateRequest } from './DecorateRequest';
+import { ReverestRequest } from './ReverestRequest';
+import ReverestError from './ReverestError';
+import pRetry from 'p-retry';
+import { TimeoutsOptions } from 'retry';
 
-export interface IRevresetOptions<B> {
+export interface Retries extends TimeoutsOptions {
+    onFailedAttempt?: (error: any) => void;
+}
+
+export interface RevresetOptions<B> {
     query?: any;
     params?: any;
     method?: string;
     url?: string;
     bag?: B;
     data?: any;
+    timeout?: any;
+    retry?: Retries;
 }
 
-export interface IRevresetResult<E> {
+export interface RevresetResult<E = any> {
     data: E;
     headers: any;
 }
 
-export class RevrestClient<E, B> {
-    private mapperOptions: IRestMapperOptions<E>[];
-    private entityRestAPI: string;
+export class RevrestClient<E = any, B = any> {
+    private mapperOptions: RestMapperOptions<E>[];
+    private entityRestAPI?: string;
+    private decorateRequests?: DecorateRequest<B>;
 
-    constructor(entityRestAPI: string, private decorateRequests: IDecorateRequest<B>) {
+    public constructor(entityRestAPI?: string, decorateRequests?: DecorateRequest<B>) {
         this.mapperOptions = [];
         this.entityRestAPI = entityRestAPI;
+        this.decorateRequests = decorateRequests;
     }
 
-    public addMapper(mapperOption: IRestMapperOptions<E>): void {
+    public addMapper(mapperOption: RestMapperOptions<E>): void {
         this.mapperOptions.push(mapperOption);
     }
 
-    public async fillData(entities: E[], options: any): Promise<any> {
-
+    protected async fillData(entities: E[], options: any): Promise<any> {
         const mappers: RestMapper<E, B>[] = this.mapperOptions.map(m => new RestMapper<E, B>(m));
 
         entities.forEach((entity: E) => {
@@ -45,7 +54,15 @@ export class RevrestClient<E, B> {
 
         var queryPromises: Promise<any>[] = [];
         mappers.forEach((currentMapper: RestMapper<E, B>) => {
-            queryPromises.push(currentMapper.queryData(this.decorateRequests, options));
+            if (currentMapper.retry) {
+                queryPromises.push(
+                    pRetry(currentMapper.queryData.bind(currentMapper, options.bag, this.decorateRequests), {
+                        ...currentMapper.retry,
+                    }),
+                );
+            } else {
+                queryPromises.push(currentMapper.queryData(options.bag, this.decorateRequests));
+            }
         });
 
         await Promise.all(queryPromises);
@@ -59,19 +76,19 @@ export class RevrestClient<E, B> {
         return entities;
     }
 
-    public fillparams(url: string, params: any): string {
-        const regExp: RegExp = /(\{[^}]+\})/g;
+    protected fillparams(url: string, params: any): string {
+        const regExp = /(\{[^}]+\})/g;
         const matches: RegExpMatchArray | null = url.match(regExp);
-        if(matches!=null) {
-            for (let i: number = 0; i < matches.length; i++) {
+        if (matches != null) {
+            for (let i = 0; i < matches.length; i++) {
                 var str: string = matches[i];
-                var key: string = str.replace("{", "").replace("}", "");
+                var key: string = str.replace('{', '').replace('}', '');
 
-                var replacementValue: string = "";
+                var replacementValue = '';
                 if (params) {
                     replacementValue = params[key];
                     if (replacementValue === undefined) {
-                        replacementValue = "";
+                        replacementValue = '';
                     }
                 }
                 url = url.replace(str, replacementValue);
@@ -80,31 +97,35 @@ export class RevrestClient<E, B> {
         return url;
     }
 
-    public sendRequest(options: IRevresetOptions<B>): Promise<IRevresetResult<E>> {
-
+    public sendRequest(options: RevresetOptions<B>): Promise<RevresetResult<E>> {
         return new Promise<any>((resolve, reject) => {
             var req: ReverestRequest = new ReverestRequest();
 
-            if (!options.url) {
+            if (!options.url && this.entityRestAPI) {
                 options.url = options.url || this.fillparams(this.entityRestAPI, options.params);
             }
-    
-            var httpreq:any = unirest[options.method!](options.url);
-    
+
+            //@ts-ignore
+            var httpreq: any = superagent[options.method!](options.url);
+
             if (options && options.query) {
                 httpreq.query(options.query);
             }
-    
+
             // decorate transaction with additional data, such as: custom headers, different content type and cookies.
             if (this.decorateRequests) {
                 this.decorateRequests.decorateRequest(req, options.bag);
             }
-    
+
             // initialize final cookies before sending a request to the remote server
-            httpreq.headers(req.headers);
+            for (let [key, value] of Object.entries(req.headers)) {
+                httpreq.set({ [key]: value });
+            }
+
+            options.timeout && httpreq.timeout(options.timeout);
             httpreq.send(options.data);
-            httpreq.end((response: any) => {
-                if (response.status < 300) {
+            httpreq.end((err: any, response: any) => {
+                if (response && response.status < 300) {
                     var promise: Promise<any> | null = null;
                     var isArray: boolean = Array.isArray(response.body);
                     if (isArray) {
@@ -113,59 +134,55 @@ export class RevrestClient<E, B> {
                         promise = this.fillData([response.body], options);
                     }
 
-                    promise.then((results: any) => {
-                        resolve({
-                            data: isArray ? results : results[0],
-                            headers: response.headers
-                        });
-                    }).catch(reject);                   
+                    promise
+                        .then((results: any) => {
+                            resolve({
+                                data: isArray ? results : results[0],
+                                headers: response.headers,
+                            });
+                        })
+                        .catch(reject);
                 } else {
-                    reject(new RevrestError(options.url!, response.status, response.body, options.query, options.data));
+                    reject(
+                        new ReverestError(
+                            options.url!,
+                            response ? response.status : err.toString(),
+                            response ? response.body : err.toString(),
+                            options.query,
+                            options.data,
+                        ),
+                    );
                 }
             });
         });
     }
 
-    public async get(options: IRevresetOptions<B>): Promise<IRevresetResult<E>> {
-        return this.sendRequest({
-            ...options,
-            method: "get"
-        });
+    private async sendRetriedRequest(method: string, options?: RevresetOptions<B>): Promise<RevresetResult<E>> {
+        const allOptions = options || {};
+        const { retry, ...reverestOptions } = allOptions;
+        if (retry) {
+            return pRetry(this.sendRequest.bind(this, { ...reverestOptions, method: method }), { ...retry });
+        }
+        return this.sendRequest({ ...reverestOptions, method: method });
     }
 
-    public async post(options: IRevresetOptions<B>): Promise<IRevresetResult<E>> {
-        const result: any = await this.sendRequest({
-            ...options,
-            method: "post"
-        });
-        
-        return result;
+    public async get(options?: RevresetOptions<B>): Promise<RevresetResult<E>> {
+        return this.sendRetriedRequest('get', options);
     }
 
-    public async put(options: IRevresetOptions<B>): Promise<IRevresetResult<E>> {
-        const result: any = await this.sendRequest({
-            ...options,
-            method: "put"
-        });
-        
-        return result;
+    public async post(options?: RevresetOptions<B>): Promise<RevresetResult<E>> {
+        return this.sendRetriedRequest('post', options);
     }
 
-    public async delete(options: IRevresetOptions<B>): Promise<IRevresetResult<E>> {
-        const result: any = await this.sendRequest({
-            ...options,
-            method: "delete"
-        });
-        
-        return result;
+    public async put(options?: RevresetOptions<B>): Promise<RevresetResult<E>> {
+        return this.sendRetriedRequest('put', options);
     }
 
-    public async patch(options: IRevresetOptions<B>): Promise<IRevresetResult<E>> {
-        const result: any = await this.sendRequest({
-            ...options,
-            method: "patch"
-        });
-        
-        return result;
+    public async delete(options?: RevresetOptions<B>): Promise<RevresetResult<E>> {
+        return this.sendRetriedRequest('delete', options);
+    }
+
+    public async patch(options?: RevresetOptions<B>): Promise<RevresetResult<E>> {
+        return this.sendRetriedRequest('patch', options);
     }
 }

@@ -1,80 +1,104 @@
-"use strict";
+'use strict';
 
-import { IDecorateRequest } from "./IDecorateRequest";
-import { ReverestRequest } from "./ReverestRequest";
-const unirest: any = require("unirest");
+import { DecorateRequest } from './DecorateRequest';
+import { ReverestRequest } from './ReverestRequest';
+import superagent from 'superagent';
+import ReverestError from './ReverestError';
+import { Retries } from './RevrestClient';
 
-
-export interface IRestMapperOptions<E> {
-	entityAttribute: string;
-	restAPIAttribute: string;
-	restAPIURL: string;
-	mergeEntities(entity: E, possibleValue: any): void;
-	method?: string;
+export interface RestMapperOptions<E> {
+    entityAttribute: string;
+    restAPIAttribute: string;
+    restAPIURL: string;
+    mergeEntities(entity: E, possibleValue: any): void;
+    before?(payload: any): any;
+    method?: string;
+    retry?: Retries;
+    timeout?: any;
 }
 
 export class RestMapper<E, B> {
+    private entityAttribute: string;
+    private restAPIAttribute: string;
+    private restAPIURL: string;
+    private dataValues: any[] = [];
+    private mergeEntities: (entity: E, possibleValue: any) => void;
+    private before: (payload: any) => any;
+    private dataLookup: any;
+    private method: string;
+    private timeout?: any;
+    public retry?: Retries;
 
-	private entityAttribute: string;
-	private restAPIAttribute: string;
-	private restAPIURL: string;
-	private dataValues: any[] = [];
-	private mergeEntities: (entity: E, possibleValue: any) => void;
-	public dataLookup: any;
-	private method: string;
+    public constructor(options: RestMapperOptions<E>) {
+        this.entityAttribute = options.entityAttribute;
+        this.restAPIAttribute = options.restAPIAttribute;
+        this.restAPIURL = options.restAPIURL;
+        this.dataLookup = {};
+        this.mergeEntities = options.mergeEntities;
+        this.before = options.before || ((payload: any) => payload);
+        this.method = options.method || 'get';
+        this.timeout = options.timeout || undefined;
+        this.retry = options.retry || undefined;
+    }
 
-	constructor(options: IRestMapperOptions<E>) {
-		this.entityAttribute = options.entityAttribute;
-		this.restAPIAttribute = options.restAPIAttribute;
-		this.restAPIURL = options.restAPIURL;
-		this.dataLookup = {};
-		this.mergeEntities = options.mergeEntities;
-		this.method = options.method || "get";
-	}
+    public collectData(entity: E): void {
+        const dataHashtable: Map<any, boolean> = new Map<any, boolean>();
+        const currentVal: any = (entity as any)[this.entityAttribute];
+        if (!dataHashtable.get(currentVal)) {
+            dataHashtable.set(currentVal, true);
+            this.dataValues.push(currentVal);
+        }
+    }
 
-	public collectData(entity: E): void {
-		const dataHashtable: Map<any, boolean> = new Map<any, boolean>();
-		const currentVal: any = (entity as any)[this.entityAttribute];
-		if(!dataHashtable.get(currentVal)) {
-			dataHashtable.set(currentVal, true);
-			this.dataValues.push(currentVal);
-		}
-	}
+    public async queryData(bag?: B, decorateCallback?: DecorateRequest<B>): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            const req: ReverestRequest = new ReverestRequest();
+            //@ts-ignore
+            var getEnititesUrl = superagent[this.method](this.restAPIURL);
+            if (decorateCallback) {
+                decorateCallback.decorateRequest(req, bag);
+            }
 
-	public async queryData(decorateCallback: IDecorateRequest<B>, bag: B): Promise<void> {
-		const req: ReverestRequest = new ReverestRequest();
-		var getEnititesUrl: any = unirest[this.method](this.restAPIURL);
-		decorateCallback.decorateRequest(req, bag);
+            for (let [key, value] of Object.entries(req.headers)) {
+                getEnititesUrl.set({ [key]: value });
+            }
 
-		getEnititesUrl.headers(req.headers);
+            this.timeout && getEnititesUrl.timeout(this.timeout);
 
-		if(this.method === "get") {
-			const query: any = {};
-			query[this.restAPIAttribute] = this.dataValues;
-			getEnititesUrl.query(query);
-		}
-		else {
-			getEnititesUrl.send(this.dataValues);
-		}
-		const self: RestMapper<E, B> = this;
+            let query: any = {};
+            if (this.method.toLowerCase() === 'get') {
+                query[this.restAPIAttribute] = this.dataValues;
+                query = this.before(query);
+                getEnititesUrl.query(query);
+            } else {
+                this.dataValues = this.before(this.dataValues);
+                getEnititesUrl.send(this.dataValues);
+            }
 
-		return new Promise<void>((resolve, reject) => {
-			getEnititesUrl.end(function(response: any): void {
-				if(response.status < 300) {
-					response.body.forEach((record: any) => {
-						self.dataLookup[record[self.restAPIAttribute]] = record;
-					});
-					resolve();
-				} else {
-					reject(response);
-				}
-			});
-		});
-	}
+            getEnititesUrl.end((err: any, response: any) => {
+                if (response && response.status < 300) {
+                    response.body.forEach((record: any) => {
+                        this.dataLookup[record[this.restAPIAttribute]] = record;
+                    });
+                    resolve();
+                } else {
+                    reject(
+                        new ReverestError(
+                            this.restAPIURL,
+                            response ? response.status : err.toString(),
+                            response ? response.body : err.toString(),
+                            query,
+                            this.dataValues,
+                        ),
+                    );
+                }
+            });
+        });
+    }
 
-	public mergeData(entity: E): void {
-		const entityFieldData: any = (entity as any)[this.entityAttribute];
-		const possibleValue: any = this.dataLookup[entityFieldData];
-		this.mergeEntities(entity, possibleValue);
-	}
+    public mergeData(entity: E): void {
+        const entityFieldData: any = (entity as any)[this.entityAttribute];
+        const possibleValue: any = this.dataLookup[entityFieldData];
+        this.mergeEntities(entity, possibleValue);
+    }
 }
