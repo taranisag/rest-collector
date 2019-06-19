@@ -1,14 +1,14 @@
-# Reverest
-> Reverest is a Node.js and browser http library that allows you to merge data from multiple api endpoints. By adding multiple mappers (explenation bellow), the library allows you to join data from multiple sources into a single entity.
+# rest-collector
+> Rest-Collector is a Node.js and browser http library that allows you to merge data from multiple api endpoints. By adding multiple mappers (explenation bellow), the library allows you to join data from multiple sources into a single entity.
 ## Installing
 ``` bash
-$ npm install reverest
+$ npm install rest-collector
 ```
 ## Interface
 ```typescript
-import { IRevresetResult } from "reverest";
+import { RestCollectorResult } from "rest-collector";
 
-interface IRevresetResult<E = any> {
+interface RestCollectorResult<E = any> {
     data: E;
     headers: any;
 }
@@ -18,13 +18,13 @@ interface IRevresetResult<E = any> {
 ### Basic APIs
 Sending get request
 ```typescript
-const client: RevrestClient = new RevrestClient("http://server/api/entity/{id}")
-const resultArray: IRevresetResult = await client.get();
+const client: RestCollectorClient = new RestCollectorClient("http://server/api/entity/{id}")
+const resultArray: RestCollectorResult = await client.get();
 
 console.log("data", resultArray.data);
 console.log("headers", resultArray.headers);
 
-const singleData: IRevresetResult = await client.get({
+const singleData: RestCollectorResult = await client.get({
     params: { id: 1 }
 });
 
@@ -33,16 +33,16 @@ console.log("data", singleData.data);
 
 Sending post request
 ```typescript
-const client: RevrestClient = new RevrestClient("http://server/api/entity/{id}")
-const result: IRevresetResult = await client.post({
+const client: RestCollectorClient = new RestCollectorClient("http://server/api/entity/{id}")
+const result: RestCollectorResult = await client.post({
     data: { name: "entity #1" }
 });
 ```
 
 Sending put request
 ```typescript
-const client: RevrestClient = new RevrestClient("http://server/api/entity/{id}")
-const result: IRevresetResult = await client.put({
+const client: RestCollectorClient = new RestCollectorClient("http://server/api/entity/{id}")
+const result: RestCollectorResult = await client.put({
     params: { id: 1 },
     data: { name: "entity #2" }
 });
@@ -50,15 +50,15 @@ const result: IRevresetResult = await client.put({
 
 Sending delete request
 ```typescript
-const client: RevrestClient = new RevrestClient("http://server/api/entity/{id}")
-const result: IRevresetResult = await client.delete({
+const client: RestCollectorClient = new RestCollectorClient("http://server/api/entity/{id}")
+const result: RestCollectorResult = await client.delete({
     params: { id: 1 }
 });
 ```
 ### Adding Mappers
 When using microservices architecture you will need to join data from entities in the application level.
 ```typescript
-const client: RevrestClient = new RevrestClient("http://server/api/entity/{id}");
+const client: RestCollectorClient = new RestCollectorClient("http://server/api/entity/{id}");
 client.addMapper({
     entityAttribute: "userId",
     restAPIAttribute: "id",
@@ -94,7 +94,7 @@ You can add more than one mapper to join data from more than one other api.
 
 ### Adding More Than One Mapper with before method
 ```typescript
-const client: RevrestClient = new RevrestClient("http://server/api/entity/{id}");
+const client: RestCollectorClient = new RestCollectorClient("http://server/api/entity/{id}");
 client.addMapper({
     entityAttribute: "userId",
     restAPIAttribute: "id",
@@ -140,16 +140,16 @@ result:
 ### Decorate Requests
 In most scenarios you will want to add more meta data information for a specific request such as: transaction id, authentication header or custom headers. 
 ```typescript
-const requestDecorator: IDecorateRequest = {
-    decorateRequest: (req: ReverestRequest, bag: any): void => {
+const requestDecorator: DecorateRequest = {
+    decorateRequest: (req: RestCollectorRequest, bag: any): void => {
         req.headers.Authorization = "yoursecret!";
         req.headers.transactionid = bag.transactionid;
     };
 }
-const client: RevrestClient = new RevrestClient("http://server/api/entity/{id}", requestDecorator);
+const client: RestCollectorClient = new RestCollectorClient("http://server/api/entity/{id}", requestDecorator);
 const result = await client.get({
     bag: { transactionid = "transactionid" }
 });
 ```
 
-### More Usage Examples - https://github.com/taranisag/reverest/blob/master/tests/test.ts
+### More Usage Examples - https://github.com/taranisag/rest-collector/blob/master/tests/test.ts

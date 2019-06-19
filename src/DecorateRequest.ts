@@ -1,5 +1,5 @@
-import { ReverestRequest } from './ReverestRequest';
+import { RestCollectorRequest } from './RestCollectorRequest';
 
 export interface DecorateRequest<B> {
-    decorateRequest(req: ReverestRequest, bag?: B): void;
+    decorateRequest(req: RestCollectorRequest, bag?: B): void;
 }

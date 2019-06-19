@@ -1,4 +1,4 @@
-export { RevrestClient, RevresetOptions, RevresetResult } from './RevrestClient';
+export { RestCollectorClient, RestCollectorOptions, RestCollectorResult } from './RestCollectorClient';
 export { RestMapperOptions, RestMapper } from './RestMapper';
 export { DecorateRequest } from './DecorateRequest';
-export { ReverestRequest } from './ReverestRequest';
+export { RestCollectorRequest } from './RestCollectorRequest';
