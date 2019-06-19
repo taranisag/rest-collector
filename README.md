@@ -17,6 +17,8 @@ interface RestCollectorResult<E = any> {
 }
 ```
 
+## Demo: https://codesandbox.io/embed/holy-frost-n222p 
+
 ## API
 ### Basic APIs
 Sending get request
@@ -162,3 +164,4 @@ const result = await client.get({
 ```
 
 ### More Usage Examples - https://github.com/taranisag/rest-collector/blob/master/tests/test.ts
+
