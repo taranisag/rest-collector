@@ -92,6 +92,12 @@ addMapper api:
 * `restAPIURL`: The endpoint of the other api.
 * `before?`: optional - a function which receives the query(get method) or payload (other http methods) and returns a new query/payload to be sent to the other api. This is usefull when you need to adjust the query/payload that you send to the api.
 * `method?`: optional - the http method for the second api. Defaults to `get`.
+* `retry?`: optional - the retries configuration (applies also for the client) - an object with the following properties:
+    * `retries`: number of retries.
+    * `onFailedAttempt?`: optional - a callback on a failed attempt.
+    * other options from node-retry: https://github.com/tim-kos/node-retry#retryoperationoptions
+
+
 
 You can add more than one mapper to join data from more than one other api.
 
