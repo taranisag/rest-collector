@@ -1,4 +1,4 @@
-export class ReverestRequest {
+export class RestCollectorRequest {
     public headers: any;
     public constructor() {
         this.headers = {

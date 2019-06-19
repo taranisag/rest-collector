@@ -1,10 +1,10 @@
 'use strict';
 
 import { DecorateRequest } from './DecorateRequest';
-import { ReverestRequest } from './ReverestRequest';
+import { RestCollectorRequest } from './RestCollectorRequest';
 import superagent from 'superagent';
-import ReverestError from './ReverestError';
-import { Retries } from './RevrestClient';
+import RestCollectorError from './RestCollectorError';
+import { Retries } from './RestCollectorClient';
 
 export interface RestMapperOptions<E> {
     entityAttribute: string;
@@ -52,7 +52,7 @@ export class RestMapper<E, B> {
 
     public async queryData(bag?: B, decorateCallback?: DecorateRequest<B>): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            const req: ReverestRequest = new ReverestRequest();
+            const req: RestCollectorRequest = new RestCollectorRequest();
             //@ts-ignore
             var getEnititesUrl = superagent[this.method](this.restAPIURL);
             if (decorateCallback) {
@@ -83,7 +83,7 @@ export class RestMapper<E, B> {
                     resolve();
                 } else {
                     reject(
-                        new ReverestError(
+                        new RestCollectorError(
                             this.restAPIURL,
                             response ? response.status : err.toString(),
                             response ? response.body : err.toString(),

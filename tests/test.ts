@@ -2,9 +2,9 @@
 import { expect } from 'chai';
 import express, { Request, Response } from 'express';
 import bodyParser from 'body-parser';
-import { RevrestClient, DecorateRequest as IDecorateRequest, ReverestRequest } from '../src/index';
+import { RestCollectorClient, DecorateRequest as IDecorateRequest, RestCollectorRequest } from '../src/index';
 import { Server } from 'http';
-import ReverestError from '../src/ReverestError';
+import RestCollectorError from '../src/RestCollectorError';
 const app = express();
 // support parsing of application/json type post data
 app.use(bodyParser.json());
@@ -38,7 +38,7 @@ interface Bag {
 }
 
 class DecorateRequest implements IDecorateRequest<Bag> {
-    public decorateRequest(req: ReverestRequest, bag: Bag): void {
+    public decorateRequest(req: RestCollectorRequest, bag: Bag): void {
         req.headers.userId = bag.userId;
     }
 }
@@ -85,11 +85,11 @@ app.get('/api/users', (req: Request, res: Response) => {
     const users = [
         {
             id: 3,
-            email: 'user3@taranis.ag',
+            email: 'user3@gmail.com',
         },
         {
             id: 4,
-            email: 'user4@taranis.ag',
+            email: 'user4@gmail.com',
         },
     ];
     const usersToSend = users.filter(u => req.query.id.includes(u.id.toString()));
@@ -132,7 +132,7 @@ const server: Server = app.listen(port);
 
 describe('tests', () => {
     it('Simple', async () => {
-        const client: RevrestClient<BaseEntity, Bag> = new RevrestClient<BaseEntity, Bag>(
+        const client: RestCollectorClient<BaseEntity, Bag> = new RestCollectorClient<BaseEntity, Bag>(
             'http://localhost:3000/api/logins',
             new DecorateRequest(),
         );
@@ -144,7 +144,7 @@ describe('tests', () => {
     });
 
     it('Simple by id', async () => {
-        const client: RevrestClient<BaseEntity, Bag> = new RevrestClient<BaseEntity, Bag>(
+        const client: RestCollectorClient<BaseEntity, Bag> = new RestCollectorClient<BaseEntity, Bag>(
             'http://localhost:3000/api/logins/{id}',
             new DecorateRequest(),
         );
@@ -156,7 +156,7 @@ describe('tests', () => {
     });
 
     it('Simple With forigen keys', async () => {
-        const client: RevrestClient<BaseEntity, Bag> = new RevrestClient<BaseEntity, Bag>(
+        const client: RestCollectorClient<BaseEntity, Bag> = new RestCollectorClient<BaseEntity, Bag>(
             'http://localhost:3000/api/logins',
             new DecorateRequest(),
         );
@@ -179,20 +179,20 @@ describe('tests', () => {
             {
                 id: 1,
                 userId: 3,
-                email: 'user3@taranis.ag',
+                email: 'user3@gmail.com',
                 loginTime: 1560518174,
             },
             {
                 id: 2,
                 userId: 4,
-                email: 'user4@taranis.ag',
+                email: 'user4@gmail.com',
                 loginTime: 1560172574,
             },
         ]);
     });
 
     it('With retries when base api fails', async () => {
-        const client: RevrestClient<BaseEntity, Bag> = new RevrestClient<BaseEntity, Bag>(
+        const client: RestCollectorClient<BaseEntity, Bag> = new RestCollectorClient<BaseEntity, Bag>(
             'http://localhost:3000/api/loginsFail',
             new DecorateRequest(),
         );
@@ -221,12 +221,13 @@ describe('tests', () => {
             });
             console.log(result);
         } catch (ex) {
-            expect(ex).to.be.an.instanceof(ReverestError);
+            expect((ex as RestCollectorError).status).to.equal(500);
+            expect(ex).to.be.instanceof(Error);
         }
     });
 
     it('With retries when mapper api fails', async () => {
-        const client: RevrestClient<BaseEntity, Bag> = new RevrestClient<BaseEntity, Bag>(
+        const client: RestCollectorClient<BaseEntity, Bag> = new RestCollectorClient<BaseEntity, Bag>(
             'http://localhost:3000/api/logins',
             new DecorateRequest(),
         );
@@ -255,12 +256,13 @@ describe('tests', () => {
             });
             console.log(result);
         } catch (ex) {
-            expect(ex).to.be.an.instanceof(ReverestError);
+            expect((ex as RestCollectorError).status).to.equal(500);
+            expect(ex).to.be.an.instanceof(Error);
         }
     });
 
     it('Multiple mappers', async () => {
-        const client: RevrestClient<BaseEntity, Bag> = new RevrestClient<BaseEntity, Bag>(
+        const client: RestCollectorClient<BaseEntity, Bag> = new RestCollectorClient<BaseEntity, Bag>(
             'http://localhost:3000/api/logins',
             new DecorateRequest(),
         );
@@ -301,14 +303,14 @@ describe('tests', () => {
             {
                 id: 1,
                 userId: 3,
-                email: 'user3@taranis.ag',
+                email: 'user3@gmail.com',
                 course: 'Chemistry',
                 loginTime: 1560518174,
             },
             {
                 id: 2,
                 userId: 4,
-                email: 'user4@taranis.ag',
+                email: 'user4@gmail.com',
                 course: 'Biology',
                 loginTime: 1560172574,
             },
@@ -316,7 +318,7 @@ describe('tests', () => {
     });
 
     it('simple post', async () => {
-        const client: RevrestClient<BaseEntity, Bag> = new RevrestClient<BaseEntity, Bag>(
+        const client: RestCollectorClient<BaseEntity, Bag> = new RestCollectorClient<BaseEntity, Bag>(
             'http://localhost:3000/api/logins/{id}',
             new DecorateRequest(),
         );
@@ -330,8 +332,8 @@ describe('tests', () => {
 
     it('get error - 404', async () => {
         try {
-            const client: RevrestClient<BaseEntity, Bag> = new RevrestClient<BaseEntity, Bag>(
-                'http://localhost:3000/api/logins/{id}',
+            const client: RestCollectorClient<BaseEntity, Bag> = new RestCollectorClient<BaseEntity, Bag>(
+                'http://localhost:3000/api/loginsFake/{id}',
                 new DecorateRequest(),
             );
             await client.get({
@@ -341,7 +343,7 @@ describe('tests', () => {
                 },
             });
         } catch (error) {
-            expect((error as ReverestError).status).to.equal(404);
+            expect((error as RestCollectorError).status).to.equal(404);
         }
     });
 

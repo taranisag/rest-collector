@@ -1,4 +1,4 @@
-export default class ReverestError extends Error {
+export default class RestCollectorError extends Error {
     public constructor(
         public readonly url: string,
         public readonly status: number,

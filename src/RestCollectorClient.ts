@@ -3,8 +3,8 @@
 import superagent from 'superagent';
 import { RestMapper, RestMapperOptions } from './RestMapper';
 import { DecorateRequest } from './DecorateRequest';
-import { ReverestRequest } from './ReverestRequest';
-import ReverestError from './ReverestError';
+import { RestCollectorRequest } from './RestCollectorRequest';
+import RestCollectorError from './RestCollectorError';
 import pRetry from 'p-retry';
 import { TimeoutsOptions } from 'retry';
 
@@ -12,7 +12,7 @@ export interface Retries extends TimeoutsOptions {
     onFailedAttempt?: (error: any) => void;
 }
 
-export interface RevresetOptions<B> {
+export interface RestCollectorOptions<B> {
     query?: any;
     params?: any;
     method?: string;
@@ -23,12 +23,12 @@ export interface RevresetOptions<B> {
     retry?: Retries;
 }
 
-export interface RevresetResult<E = any> {
+export interface RestCollectorResult<E = any> {
     data: E;
     headers: any;
 }
 
-export class RevrestClient<E = any, B = any> {
+export class RestCollectorClient<E = any, B = any> {
     private mapperOptions: RestMapperOptions<E>[];
     private entityRestAPI?: string;
     private decorateRequests?: DecorateRequest<B>;
@@ -97,9 +97,9 @@ export class RevrestClient<E = any, B = any> {
         return url;
     }
 
-    public sendRequest(options: RevresetOptions<B>): Promise<RevresetResult<E>> {
+    public sendRequest(options: RestCollectorOptions<B>): Promise<RestCollectorResult<E>> {
         return new Promise<any>((resolve, reject) => {
-            var req: ReverestRequest = new ReverestRequest();
+            var req: RestCollectorRequest = new RestCollectorRequest();
 
             if (!options.url && this.entityRestAPI) {
                 options.url = options.url || this.fillparams(this.entityRestAPI, options.params);
@@ -144,7 +144,7 @@ export class RevrestClient<E = any, B = any> {
                         .catch(reject);
                 } else {
                     reject(
-                        new ReverestError(
+                        new RestCollectorError(
                             options.url!,
                             response ? response.status : err.toString(),
                             response ? response.body : err.toString(),
@@ -157,32 +157,35 @@ export class RevrestClient<E = any, B = any> {
         });
     }
 
-    private async sendRetriedRequest(method: string, options?: RevresetOptions<B>): Promise<RevresetResult<E>> {
+    private async sendRetriedRequest(
+        method: string,
+        options?: RestCollectorOptions<B>,
+    ): Promise<RestCollectorResult<E>> {
         const allOptions = options || {};
-        const { retry, ...reverestOptions } = allOptions;
+        const { retry, ...restCollectorOptions } = allOptions;
         if (retry) {
-            return pRetry(this.sendRequest.bind(this, { ...reverestOptions, method: method }), { ...retry });
+            return pRetry(this.sendRequest.bind(this, { ...restCollectorOptions, method: method }), { ...retry });
         }
-        return this.sendRequest({ ...reverestOptions, method: method });
+        return this.sendRequest({ ...restCollectorOptions, method: method });
     }
 
-    public async get(options?: RevresetOptions<B>): Promise<RevresetResult<E>> {
+    public async get(options?: RestCollectorOptions<B>): Promise<RestCollectorResult<E>> {
         return this.sendRetriedRequest('get', options);
     }
 
-    public async post(options?: RevresetOptions<B>): Promise<RevresetResult<E>> {
+    public async post(options?: RestCollectorOptions<B>): Promise<RestCollectorResult<E>> {
         return this.sendRetriedRequest('post', options);
     }
 
-    public async put(options?: RevresetOptions<B>): Promise<RevresetResult<E>> {
+    public async put(options?: RestCollectorOptions<B>): Promise<RestCollectorResult<E>> {
         return this.sendRetriedRequest('put', options);
     }
 
-    public async delete(options?: RevresetOptions<B>): Promise<RevresetResult<E>> {
+    public async delete(options?: RestCollectorOptions<B>): Promise<RestCollectorResult<E>> {
         return this.sendRetriedRequest('delete', options);
     }
 
-    public async patch(options?: RevresetOptions<B>): Promise<RevresetResult<E>> {
+    public async patch(options?: RestCollectorOptions<B>): Promise<RestCollectorResult<E>> {
         return this.sendRetriedRequest('patch', options);
     }
 }
