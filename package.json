@@ -18,8 +18,24 @@
   "files": [
     "dist"
   ],
+  "keywords": [
+    "api",
+    "rest",
+    "merge",
+    "collect",
+    "http",
+    "typescript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/taranisag/rest-collector.git"
+  },
+  "bugs": {
+    "url": "https://github.com/taranisag/rest-collector/issues"
+  },
+  "homepage": "https://github.com/taranisag/rest-collector#readme",
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@types/chai": "4.1.2",
     "@types/express": "4.17.0",
