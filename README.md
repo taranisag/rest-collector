@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/taranisag/rest-collector.svg?branch=master)](https://travis-ci.org/taranisag/rest-collector) 
+
 # rest-collector
 > Rest-Collector is a Node.js and browser http library that allows you to merge data from multiple api endpoints. By adding multiple mappers (explenation bellow), the library allows you to join data from multiple sources into a single entity.
 ## Installing
