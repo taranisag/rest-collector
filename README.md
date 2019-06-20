@@ -164,5 +164,5 @@ const result = await client.get({
 });
 ```
 
-### More Usage Examples - https://github.com/taranisag/rest-collector/blob/master/tests/test.ts
+### More Usage Examples - https://github.com/taranisag/rest-collector/blob/master/test/test.ts
 

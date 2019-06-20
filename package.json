@@ -11,18 +11,17 @@
     "version": "npm run format && git add -A src",
     "postversion": "git push && git push --tags",
     "start": "npm run build && node dist/index.js",
-    "test": "nyc mocha -r ts-node/register tests/**/*.ts",
+    "test": "nyc mocha",
     "cover": "nyc npm test && nyc report --reporter=text-lcov | coveralls",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
     "lint": "tsc --noEmit && eslint ./src/*.ts --quiet --fix"
   },
   "nyc": {
     "include": [
-      "tests/**/*.ts"
+      "src/**/*.ts"
     ],
     "extension": [
-      ".ts",
-      ".tsx"
+      ".ts"
     ],
     "require": [
       "ts-node/register"
