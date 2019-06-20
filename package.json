@@ -1,6 +1,6 @@
 {
   "name": "rest-collector",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Node.js and browser http library that allows you to merge data from multiple api endpoints",
   "main": "dist/index.js",
   "scripts": {
