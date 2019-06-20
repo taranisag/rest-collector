@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/taranisag/rest-collector.svg?branch=master)](https://travis-ci.org/taranisag/rest-collector)
+[![Coverage Status](https://coveralls.io/repos/github/taranisag/rest-collector/badge.svg?branch=adding-coverage)](https://coveralls.io/github/taranisag/rest-collector?branch=adding-coverage)
 [![npm version](https://img.shields.io/npm/v/rest-collector.svg)](https://www.npmjs.com/package/rest-collector) 
 
 # rest-collector
