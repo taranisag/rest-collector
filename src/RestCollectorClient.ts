@@ -7,20 +7,18 @@ import { RestCollectorRequest } from './RestCollectorRequest';
 import RestCollectorError from './RestCollectorError';
 import pRetry from 'p-retry';
 import { TimeoutsOptions } from 'retry';
+import { RestCollectorSharedOptions } from './RestCollectorSharedOptions';
 
 export interface Retries extends TimeoutsOptions {
     onFailedAttempt?: (error: any) => void;
 }
 
-export interface RestCollectorOptions<B> {
+export interface RestCollectorOptions<B> extends RestCollectorSharedOptions {
     query?: any;
     params?: any;
-    method?: string;
     url?: string;
     bag?: B;
     data?: any;
-    timeout?: any;
-    retry?: Retries;
 }
 
 export interface RestCollectorResult<E = any> {

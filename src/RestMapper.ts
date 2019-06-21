@@ -5,23 +5,21 @@ import { RestCollectorRequest } from './RestCollectorRequest';
 import superagent from 'superagent';
 import RestCollectorError from './RestCollectorError';
 import { Retries } from './RestCollectorClient';
+import { RestCollectorSharedOptions } from './RestCollectorSharedOptions';
 
-export interface RestMapperOptions<E> {
+export interface RestMapperOptions<E> extends RestCollectorSharedOptions {
     entityAttribute: string;
     restAPIAttribute: string;
     restAPIURL: string;
     mergeEntities(entity: E, possibleValue: any): void;
     before?(payload: any): any;
-    method?: string;
-    retry?: Retries;
-    timeout?: any;
 }
 
 export class RestMapper<E, B> {
     private entityAttribute: string;
     private restAPIAttribute: string;
     private restAPIURL: string;
-    private dataValues: any[] = [];
+    private dataValues: any = new Set();
     private mergeEntities: (entity: E, possibleValue: any) => void;
     private before: (payload: any) => any;
     private dataLookup: any;
@@ -42,11 +40,9 @@ export class RestMapper<E, B> {
     }
 
     public collectData(entity: E): void {
-        const dataHashtable: Map<any, boolean> = new Map<any, boolean>();
         const currentVal: any = (entity as any)[this.entityAttribute];
-        if (!dataHashtable.get(currentVal)) {
-            dataHashtable.set(currentVal, true);
-            this.dataValues.push(currentVal);
+        if (!this.dataValues.has(currentVal)) {
+            this.dataValues.add(currentVal);
         }
     }
 
@@ -66,6 +62,7 @@ export class RestMapper<E, B> {
             this.timeout && getEnititesUrl.timeout(this.timeout);
 
             let query: any = {};
+            this.dataValues = Array.from(this.dataValues);
             if (this.method.toLowerCase() === 'get') {
                 query[this.restAPIAttribute] = this.dataValues;
                 query = this.before(query);
