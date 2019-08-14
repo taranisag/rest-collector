@@ -137,6 +137,7 @@ export class RestCollectorClient<E = any, B = any> {
                             resolve({
                                 data: isArray ? results : results[0],
                                 headers: response.headers,
+                                status: response.status,
                             });
                         })
                         .catch(reject);
