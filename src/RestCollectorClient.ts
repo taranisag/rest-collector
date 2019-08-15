@@ -124,14 +124,14 @@ export class RestCollectorClient<E = any, B = any> {
             httpreq.send(options.data);
             httpreq.end((err: any, response: any) => {
                 if (response && response.status < 300) {
-                    var promise: Promise<any> | null = null;
-                    var isArray: boolean = Array.isArray(response.body);
+                    const responseData = response.type === 'text/html' ? response.text : response.body;
+                    let promise: Promise<any> | null = null;
+                    let isArray: boolean = Array.isArray(responseData);
                     if (isArray) {
-                        promise = this.fillData(response.body, options);
+                        promise = this.fillData(responseData, options);
                     } else {
-                        promise = this.fillData([response.body], options);
+                        promise = this.fillData([responseData], options);
                     }
-
                     promise
                         .then((results: any) => {
                             resolve({

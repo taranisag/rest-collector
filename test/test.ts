@@ -73,6 +73,10 @@ app.get('/api/logins', (req: Request, res: Response) => {
     res.send(loginsEntitiesArray);
 });
 
+app.get('/api/text', (req: Request, res: Response) => {
+    res.send('abcd');
+});
+
 app.get('/api/loginsFail', (req: Request, res: Response) => {
     res.sendStatus(500);
 });
@@ -153,6 +157,14 @@ describe('tests', () => {
             bag: { userId: 'user34' },
         });
         expect(result.data).to.deep.equal(loginsEntitiesArray.filter(x => x.id === 1));
+    });
+
+    it('Text Response', async () => {
+        const client: RestCollectorClient<BaseEntity, Bag> = new RestCollectorClient<BaseEntity, Bag>(
+            'http://localhost:3000/api/text',
+        );
+        const result = await client.get();
+        expect(result.data).to.deep.equal('abcd');
     });
 
     it('Simple With forigen keys', async () => {
