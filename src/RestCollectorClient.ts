@@ -124,7 +124,10 @@ export class RestCollectorClient<E = any, B = any> {
             httpreq.send(options.data);
             httpreq.end((err: any, response: any) => {
                 if (response && response.status < 300) {
-                    const responseData = response.type === 'text/html' ? response.text : response.body;
+                    const responseData =
+                        response.type && typeof response.type === 'string' && response.type.startsWith('text')
+                            ? response.text
+                            : response.body;
                     let promise: Promise<any> | null = null;
                     let isArray: boolean = Array.isArray(responseData);
                     if (isArray) {
